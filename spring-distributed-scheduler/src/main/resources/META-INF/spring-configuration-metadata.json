@@ -1,0 +1,60 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.SchedulerProperties",
+      "name": "scheduler",
+      "type": "com.budjb.spring.distributed.scheduler.SchedulerProperties"
+    },
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.SchedulerProperties",
+      "name": "scheduler.instruction",
+      "sourceMethod": "getInstruction()",
+      "type": "com.budjb.spring.distributed.scheduler.ClusterInstructionProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.ClusterInstructionProperties",
+      "defaultValue": 150000,
+      "name": "scheduler.instruction.manager-timeout",
+      "description": "The amount of time that the cluster manager should wait for all published\n instructions to complete before giving up (in milliseconds).",
+      "type": "java.lang.Long"
+    },
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.ClusterInstructionProperties",
+      "defaultValue": 250,
+      "name": "scheduler.instruction.poll-interval",
+      "description": "The amount of time that the instruction worker should wait before checking whether\n the instruction logic has completed (in milliseconds).",
+      "type": "java.lang.Long"
+    },
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.ClusterInstructionProperties",
+      "defaultValue": 120000,
+      "name": "scheduler.instruction.poll-timeout",
+      "description": "The amount of time that the instruction worker should wait for the instruction\n logic to complete before giving up (in milliseconds).",
+      "type": "java.lang.Long"
+    },
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.SchedulerProperties",
+      "defaultValue": 180000,
+      "name": "scheduler.rebalance-interval",
+      "description": "The amount of time that should pass between cluster re-balancing, in milliseconds.",
+      "type": "java.lang.Long"
+    },
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.SchedulerProperties",
+      "defaultValue": 30000,
+      "name": "scheduler.rebalance-poll-delay",
+      "description": "The amount of time that the application should wait until it starts checking whether\n a re-balance should occur, in milliseconds.",
+      "type": "java.lang.Long"
+    },
+    {
+      "sourceType": "com.budjb.spring.distributed.scheduler.SchedulerProperties",
+      "defaultValue": 30000,
+      "name": "scheduler.rebalance-poll-interval",
+      "description": "The amount of time that should pass between checks to determine whether a re-rebalance\n should occur, in milliseconds.",
+      "type": "java.lang.Long"
+    }
+  ]
+}

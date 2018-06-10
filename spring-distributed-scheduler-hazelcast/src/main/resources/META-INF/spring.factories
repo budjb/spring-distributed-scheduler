@@ -1,0 +1,1 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.budjb.spring.distributed.scheduler.cluster.hazelcast.HazelcastWorkloadSchedulerAutoConfiguration

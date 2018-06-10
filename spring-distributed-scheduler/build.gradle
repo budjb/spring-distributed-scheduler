@@ -1,0 +1,54 @@
+dependencyManagement {
+    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
+}
+
+dependencies {
+    compile 'com.budjb:spring-distributed-locks:0.1.4.BETA'
+    compile 'org.springframework.boot:spring-boot-starter'
+    compile 'javax.validation:validation-api'
+
+    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
+    testCompile 'cglib:cglib-nodep:3.2.6'
+    testCompile 'org.objenesis:objenesis:2.6'
+
+    optional "org.springframework.boot:spring-boot-configuration-processor"
+}
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId project.group
+            artifactId project.name
+            version project.version
+        }
+    }
+}
+
+bintray {
+    user = System.getenv(bintrayUsernameEnvVar)
+    key = System.getenv(bintrayKeyEnvVar)
+    publish = true
+
+    pkg {
+        websiteUrl = 'https://github.com/budjb/spring-distributed-scheduler'
+        issueTrackerUrl = 'https://github.com/budjb/spring-distributed-scheduler/issues'
+        vcsUrl = 'git@github.com:budjb/spring-distributed-scheduler.git'
+        githubRepo = 'budjb/spring-distributed-scheduler'
+
+        desc = 'Core implementation of a distributed workload scheduling library for Spring Boot.'
+        labels = ['spring-boot', 'spring-framework', 'hazelcast']
+        repo = 'spring'
+        name = project.name
+        licenses = ['Apache-2.0']
+        publications = ['library']
+
+        version {
+            name = project.version
+            released = new Date()
+            vcsTag = project.version
+        }
+    }
+}
