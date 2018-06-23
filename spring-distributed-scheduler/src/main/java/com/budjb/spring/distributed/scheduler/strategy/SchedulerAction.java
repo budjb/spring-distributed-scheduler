@@ -1,5 +1,6 @@
 package com.budjb.spring.distributed.scheduler.strategy;
 
+import com.budjb.spring.distributed.scheduler.instruction.ActionType;
 import com.budjb.spring.distributed.scheduler.workload.Workload;
 
 import java.io.Serializable;

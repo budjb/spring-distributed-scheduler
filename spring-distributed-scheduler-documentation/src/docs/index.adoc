@@ -1,0 +1,29 @@
+= Spring Distributed Scheduler
+:toc:
+:copyright: Apache License, Version 2.0
+:icons: font
+:source-highlighter: prettify
+
+== Introduction
+
+[.lead]
+The Spring Distributed Scheduler library is a framework for running and balancing long-running workloads across a
+cluster of horizontally scaled applications.
+
+The scheduling functionality provided by the library differs from the job scheduling logic built in to Spring Boot, in
+that managed workloads do not terminate on their own, and thus do not need to be run on a timer. This brings a set
+of challenges that this library attempts to solve:
+
+- How does the application react when the set of workloads changes? For example, when the application is started,
+  processes need to run against resources A, B, and C, but later, that set of workloads changes to A, C, and D.
+- How does any one member of the application cluster know what its siblings are currently processing?
+- How do we ensure that workloads are evenly distributed across all cluster members, so that no one node is processing
+  drastically more than its siblings?
+- How can business logic become decoupled from workload and cluster management and balancing?
+
+The distributed scheduler library exists to solve all of the above, and give applications a way to scale horizontally
+without sacrificing stateful workload management.
+
+include::usage.adoc[]
+
+include::example.adoc[]

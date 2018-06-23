@@ -15,10 +15,12 @@ public abstract class AbstractWorkloadRunnable implements WorkloadRunnable {
      * Running state.
      */
     private RunningState runningState = RunningState.NOT_STARTED;
+
     /**
      * Exception thrown during the course of running the workload.
      */
     private Throwable throwable = null;
+
     /**
      * Whether the runnable has been interrupted. Processes implementing this parent
      * class should check with this flag before it continues further operations so that
@@ -95,7 +97,7 @@ public abstract class AbstractWorkloadRunnable implements WorkloadRunnable {
      * {@inheritDoc}
      */
     @Override
-    public void simulateFailure() {
+    public void fail() {
         interrupted = true;
         runningState = RunningState.ERROR;
     }

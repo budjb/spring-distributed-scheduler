@@ -49,7 +49,7 @@ public interface WorkloadRunnable extends Runnable {
     /**
      * Forces a failure state. This is useful for testing various failure scenarios.
      */
-    void simulateFailure();
+    void fail();
 
     /**
      * Returns an exception that was encountered during an error in execution.

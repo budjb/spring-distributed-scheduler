@@ -47,9 +47,9 @@ public interface WorkloadContext {
     void terminate();
 
     /**
-     * Simulate a workload failure. This is useful for testing.
+     * Interrupts and forces an error state on the workload. This is useful for testing.
      */
-    void simulateFailure();
+    void fail();
 
     /**
      * Returns the running state of the workload.

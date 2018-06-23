@@ -2,6 +2,7 @@ package com.budjb.spring.distributed.scheduler.strategy;
 
 import com.budjb.spring.distributed.scheduler.RunningState;
 import com.budjb.spring.distributed.scheduler.cluster.ClusterMember;
+import com.budjb.spring.distributed.scheduler.instruction.ActionType;
 import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction;
 import com.budjb.spring.distributed.scheduler.workload.Workload;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;

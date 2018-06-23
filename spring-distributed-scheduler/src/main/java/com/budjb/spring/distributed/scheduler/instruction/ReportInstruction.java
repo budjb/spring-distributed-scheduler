@@ -1,6 +1,6 @@
 package com.budjb.spring.distributed.scheduler.instruction;
 
-import com.budjb.spring.distributed.scheduler.workload.WorkloadProviderRegistry;
+import com.budjb.spring.distributed.scheduler.workload.WorkloadContextManager;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -10,16 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ReportInstruction implements Instruction<WorkloadReport> {
     /**
-     * Workload provider registry.
+     * Workload context manager.
      */
     @Autowired
-    transient WorkloadProviderRegistry workloadProviderRegistry;
+    transient WorkloadContextManager workloadContextManager;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public WorkloadReport call() {
-        return workloadProviderRegistry.getWorkloadReport();
+        return workloadContextManager.getWorkloadReport();
     }
 }

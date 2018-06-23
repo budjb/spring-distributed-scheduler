@@ -132,8 +132,8 @@ public abstract class SingleThreadedWorkloadContext implements WorkloadContext {
      * {@inheritDoc}
      */
     @Override
-    public void simulateFailure() {
-        runnable.simulateFailure();
+    public void fail() {
+        runnable.fail();
     }
 
     /**

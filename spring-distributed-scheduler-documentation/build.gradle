@@ -1,0 +1,14 @@
+apply plugin: 'org.asciidoctor.convert'
+
+asciidoctor {
+    setSourceDir(new File("$projectDir/src/docs"))
+    sources {
+        include 'index.adoc'
+    }
+    backends 'html5'
+    setAttributes([
+        'version'           : project.version,
+        'revnumber'         : project.version,
+        'group'             : project.group,
+    ])
+}

@@ -4,13 +4,14 @@ import com.budjb.spring.distributed.lock.DistributedLockProvider
 import com.budjb.spring.distributed.lock.reentrant.ReentrantDistributedLockProvider
 import com.budjb.spring.distributed.scheduler.cluster.standalone.StandaloneClusterManager
 import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction
-import com.budjb.spring.distributed.scheduler.strategy.*
+import com.budjb.spring.distributed.scheduler.instruction.ActionType
+import com.budjb.spring.distributed.scheduler.strategy.GreedySchedulerStrategy
+import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction
+import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy
 import com.budjb.spring.distributed.scheduler.support.workload.TestWorkload
-import com.budjb.spring.distributed.scheduler.support.workload.TestWorkloadProvider
-import com.budjb.spring.distributed.scheduler.workload.Workload
-import com.budjb.spring.distributed.scheduler.workload.WorkloadProvider
-import com.budjb.spring.distributed.scheduler.workload.WorkloadProviderRegistry
-import com.budjb.spring.distributed.scheduler.workload.WorkloadReport
+import com.budjb.spring.distributed.scheduler.support.workload.TestWorkloadContextFactory
+import com.budjb.spring.distributed.scheduler.support.workload.TestWorkloadRepositorySource
+import com.budjb.spring.distributed.scheduler.workload.*
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import spock.lang.Specification
@@ -44,18 +45,24 @@ class IntegrationSpec extends Specification {
         Workload c = new TestWorkload('c')
         Workload d = new TestWorkload('d')
 
-        WorkloadProvider workloadProvider = new TestWorkloadProvider([a, b, c, d] as Set)
+        WorkloadRepositorySource workloadRepositorySource = new TestWorkloadRepositorySource([a, b, c, d] as Set)
+        WorkloadRepository workloadRepository = new SimpleWorkloadRepository([workloadRepositorySource])
 
-        WorkloadProviderRegistry workloadProviderRegistry = new WorkloadProviderRegistry([workloadProvider], schedulerProperties)
-        beanFactory.registerSingleton('workloadProviderRegistry', workloadProviderRegistry)
+        WorkloadContextFactory workloadContextFactory = new TestWorkloadContextFactory()
 
-        DistributedScheduler distributedScheduler = new DistributedScheduler(distributedLockProvider, workloadProviderRegistry, clusterManager, schedulerProperties, schedulerStrategy)
+        WorkloadContextManager workloadContextManager = new WorkloadContextManager([workloadContextFactory], schedulerProperties)
+        beanFactory.registerSingleton('workloadContextManager', workloadContextManager)
+
+        DistributedScheduler distributedScheduler = new DistributedScheduler(distributedLockProvider, clusterManager, schedulerProperties, schedulerStrategy, workloadRepository)
 
         when: 'the initial schedule occurs'
         distributedScheduler.schedule(true)
 
+        and: 'some time has passed to avoid a race condition'
+        sleep(50)
+
         and: 'the report is gathered'
-        WorkloadReport report = workloadProviderRegistry.getWorkloadReport()
+        WorkloadReport report = workloadContextManager.getWorkloadReport()
 
         then: 'all workloads are running'
         report.entries.size() == 4
@@ -73,20 +80,23 @@ class IntegrationSpec extends Specification {
         Workload c = new TestWorkload('c')
         Workload d = new TestWorkload('d')
 
-        WorkloadProvider workloadProvider = new TestWorkloadProvider([a, b, c, d] as Set)
+        WorkloadRepositorySource workloadRepositorySource = new TestWorkloadRepositorySource([a, b, c, d] as Set)
+        WorkloadRepository workloadRepository = new SimpleWorkloadRepository([workloadRepositorySource])
 
-        WorkloadProviderRegistry workloadProviderRegistry = new WorkloadProviderRegistry([workloadProvider], schedulerProperties)
-        beanFactory.registerSingleton('workloadProviderRegistry', workloadProviderRegistry)
+        WorkloadContextFactory workloadContextFactory = new TestWorkloadContextFactory()
 
-        DistributedScheduler distributedScheduler = new DistributedScheduler(distributedLockProvider, workloadProviderRegistry, clusterManager, schedulerProperties, schedulerStrategy)
+        WorkloadContextManager workloadContextManager = new WorkloadContextManager([workloadContextFactory], schedulerProperties)
+        beanFactory.registerSingleton('workloadContextManager', workloadContextManager)
+
+        DistributedScheduler distributedScheduler = new DistributedScheduler(distributedLockProvider, clusterManager, schedulerProperties, schedulerStrategy, workloadRepository)
 
         distributedScheduler.schedule(true)
 
         when: 'workload "A" has failed'
-        clusterManager.submitInstructions([(clusterManager.getClusterMembers()[0]): new SchedulerInstruction([new SchedulerAction(a, ActionType.SIMULATE_FAIL)])])
+        clusterManager.submitInstructions([(clusterManager.getClusterMembers()[0]): new SchedulerInstruction([new SchedulerAction(a, ActionType.FAIL)])])
 
         and: 'the report is retrieved'
-        WorkloadReport report = workloadProviderRegistry.getWorkloadReport()
+        WorkloadReport report = workloadContextManager.getWorkloadReport()
 
         then: 'workload "A" is reported as failed and the other 3 are still running'
         report.entries.size() == 4
@@ -96,7 +106,7 @@ class IntegrationSpec extends Specification {
         distributedScheduler.schedule(true)
 
         and: 'the report is refreshed'
-        report = workloadProviderRegistry.getWorkloadReport()
+        report = workloadContextManager.getWorkloadReport()
 
         then: 'workload "A" has been restarted'
         report.entries.size() == 4
@@ -113,36 +123,39 @@ class IntegrationSpec extends Specification {
         Workload c = new TestWorkload('c')
         Workload d = new TestWorkload('d')
 
-        WorkloadProvider workloadProvider = new TestWorkloadProvider([a, b, c, d] as Set)
+        WorkloadRepositorySource workloadRepositorySource = new TestWorkloadRepositorySource([a, b, c, d] as Set)
+        WorkloadRepository workloadRepository = new SimpleWorkloadRepository([workloadRepositorySource])
 
-        WorkloadProviderRegistry workloadProviderRegistry = new WorkloadProviderRegistry([workloadProvider], schedulerProperties)
-        beanFactory.registerSingleton('workloadProviderRegistry', workloadProviderRegistry)
+        WorkloadContextFactory workloadContextFactory = new TestWorkloadContextFactory()
 
-        DistributedScheduler distributedScheduler = new DistributedScheduler(distributedLockProvider, workloadProviderRegistry, clusterManager, schedulerProperties, schedulerStrategy)
+        WorkloadContextManager workloadContextManager = new WorkloadContextManager([workloadContextFactory], schedulerProperties)
+        beanFactory.registerSingleton('workloadContextManager', workloadContextManager)
+
+        DistributedScheduler distributedScheduler = new DistributedScheduler(distributedLockProvider, clusterManager, schedulerProperties, schedulerStrategy, workloadRepository)
 
         distributedScheduler.schedule(true)
 
         when: 'workload "c" is removed from the registry'
-        workloadProvider.removeWorkload(c)
+        workloadRepositorySource.removeWorkload(c)
 
         and: 'a re-schedule occurs'
         distributedScheduler.schedule(true)
 
         and: 'the report is retrieved'
-        WorkloadReport report = workloadProviderRegistry.getWorkloadReport()
+        WorkloadReport report = workloadContextManager.getWorkloadReport()
 
         then: 'workload "C" is no longer reported'
         report.entries.size() == 3
         !report.entries.any { it.workload == c }
 
         when: 'workload "C" is reintroduced into the registry'
-        workloadProvider.addWorkload(c)
+        workloadRepositorySource.addWorkload(c)
 
         and: 'a re-schedule occurs'
         distributedScheduler.schedule(true)
 
         and: 'the report is refreshed'
-        report = workloadProviderRegistry.getWorkloadReport()
+        report = workloadContextManager.getWorkloadReport()
 
         then: 'workload "C" is reported again'
         report.entries.size() == 4

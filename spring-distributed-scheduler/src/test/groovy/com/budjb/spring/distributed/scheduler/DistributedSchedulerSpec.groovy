@@ -5,30 +5,30 @@ import com.budjb.spring.distributed.lock.DistributedLockProvider
 import com.budjb.spring.distributed.scheduler.cluster.ClusterManager
 import com.budjb.spring.distributed.scheduler.cluster.ClusterMember
 import com.budjb.spring.distributed.scheduler.instruction.ReportInstruction
+import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy
 import com.budjb.spring.distributed.scheduler.workload.Workload
-import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction
-import com.budjb.spring.distributed.scheduler.workload.WorkloadProviderRegistry
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport
+import com.budjb.spring.distributed.scheduler.workload.WorkloadRepository
 import org.junit.Ignore
 import spock.lang.Specification
 
 class DistributedSchedulerSpec extends Specification {
     DistributedLockProvider distributedLockProvider
-    WorkloadProviderRegistry workloadProviderRegistry
-    ClusterManager<ClusterMember> clusterManager
+    ClusterManager clusterManager
     SchedulerProperties schedulerProperties
     SchedulerStrategy schedulerStrategy
     DistributedScheduler distributedScheduler
+    WorkloadRepository workloadRepository
 
     def setup() {
         distributedLockProvider = Mock(DistributedLockProvider)
-        workloadProviderRegistry = Mock(WorkloadProviderRegistry)
         clusterManager = Mock(ClusterManager)
+        workloadRepository = Mock(WorkloadRepository)
         schedulerProperties = Mock(SchedulerProperties)
         schedulerStrategy = Mock(SchedulerStrategy)
 
-        distributedScheduler = new DistributedScheduler(distributedLockProvider, workloadProviderRegistry, clusterManager, schedulerProperties, schedulerStrategy)
+        distributedScheduler = new DistributedScheduler(distributedLockProvider, clusterManager, schedulerProperties, schedulerStrategy, workloadRepository)
     }
 
     def 'When the application starts, a forced schedule occurs'() {
@@ -56,7 +56,7 @@ class DistributedSchedulerSpec extends Specification {
 
         then:
         1 * lock.unlock()
-        0 * workloadProviderRegistry.getWorkloads()
+        0 * workloadRepository.getWorkloads()
         0 * clusterManager.submitInstruction(*_)
     }
 
@@ -71,10 +71,10 @@ class DistributedSchedulerSpec extends Specification {
         WorkloadReport workloadReport = Mock(WorkloadReport)
         Workload workload = Mock(Workload)
         Set<Workload> workloads = [workload]
-        workloadProviderRegistry.getWorkloads() >> workloads
+        workloadRepository.getWorkloads() >> workloads
 
         Map<ClusterMember, WorkloadReport> reports = [(clusterMember): workloadReport]
-        clusterManager.submitInstruction({ it instanceof ReportInstruction}) >> reports
+        clusterManager.submitInstruction({ it instanceof ReportInstruction }) >> reports
         clusterManager.getScheduleTime() >> System.currentTimeMillis() + 10000
 
         SchedulerInstruction workloadActionsInstruction = Mock(SchedulerInstruction)
@@ -101,10 +101,10 @@ class DistributedSchedulerSpec extends Specification {
         WorkloadReport workloadReport = Mock(WorkloadReport)
         Workload workload = Mock(Workload)
         Set<Workload> workloads = [workload]
-        workloadProviderRegistry.getWorkloads() >> workloads
+        workloadRepository.getWorkloads() >> workloads
 
         Map<ClusterMember, WorkloadReport> reports = [(clusterMember): workloadReport]
-        clusterManager.submitInstruction({ it instanceof ReportInstruction}) >> reports
+        clusterManager.submitInstruction({ it instanceof ReportInstruction }) >> reports
         clusterManager.getScheduleTime() >> 0
 
         SchedulerInstruction workloadActionsInstruction = Mock(SchedulerInstruction)
@@ -133,7 +133,7 @@ class DistributedSchedulerSpec extends Specification {
         distributedScheduler.schedule(true)
 
         then:
-        1 * workloadProviderRegistry.getWorkloads()
+        1 * workloadRepository.getWorkloads()
         1 * lock.unlock()
         0 * schedulerStrategy.schedule(*_)
     }

@@ -1,7 +1,7 @@
 package com.budjb.spring.distributed.scheduler.instruction;
 
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction;
-import com.budjb.spring.distributed.scheduler.workload.WorkloadProviderRegistry;
+import com.budjb.spring.distributed.scheduler.workload.WorkloadContextManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,9 @@ public class SchedulerInstruction implements Instruction<Boolean> {
      */
     private final List<SchedulerAction> actions;
     /**
-     * Workload provider registry.
+     * Workload context manager.
      */
-    private transient WorkloadProviderRegistry workloadProviderRegistry;
+    private transient WorkloadContextManager workloadContextManager;
 
     /**
      * Constructor.
@@ -39,13 +39,13 @@ public class SchedulerInstruction implements Instruction<Boolean> {
     }
 
     /**
-     * Sets the workload provider registry.
+     * Sets the workload context manager.
      *
-     * @param workloadProviderRegistry Workload provider registry.
+     * @param workloadContextManager Workload context manager.
      */
     @Autowired
-    public void setWorkloadProviderRegistry(WorkloadProviderRegistry workloadProviderRegistry) {
-        this.workloadProviderRegistry = workloadProviderRegistry;
+    public void setWorkloadContextManager(WorkloadContextManager workloadContextManager) {
+        this.workloadContextManager = workloadContextManager;
     }
 
     /**
@@ -68,19 +68,19 @@ public class SchedulerInstruction implements Instruction<Boolean> {
             try {
                 switch (action.getActionType()) {
                     case ADD:
-                        workloadProviderRegistry.start(action.getWorkload());
+                        workloadContextManager.start(action.getWorkload());
                         break;
 
                     case REMOVE:
-                        futures.add(workloadProviderRegistry.stop(action.getWorkload()));
+                        futures.add(workloadContextManager.stop(action.getWorkload()));
                         break;
 
                     case RESTART:
-                        futures.add(workloadProviderRegistry.restart(action.getWorkload()));
+                        futures.add(workloadContextManager.restart(action.getWorkload()));
                         break;
 
-                    case SIMULATE_FAIL:
-                        workloadProviderRegistry.simulateFailure(action.getWorkload());
+                    case FAIL:
+                        workloadContextManager.fail(action.getWorkload());
                         break;
 
                     default:

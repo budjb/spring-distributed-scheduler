@@ -1,4 +1,4 @@
-package com.budjb.spring.distributed.scheduler.strategy;
+package com.budjb.spring.distributed.scheduler.instruction;
 
 /**
  * Scheduler instruction action types.
@@ -7,5 +7,6 @@ public enum ActionType {
     ADD,
     REMOVE,
     RESTART,
-    SIMULATE_FAIL
+    STOP,
+    FAIL
 }

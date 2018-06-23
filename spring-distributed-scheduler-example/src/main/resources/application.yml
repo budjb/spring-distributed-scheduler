@@ -1,0 +1,3 @@
+scheduler:
+  rebalance-interval: 60000
+  rebalance-poll-interval: 10000

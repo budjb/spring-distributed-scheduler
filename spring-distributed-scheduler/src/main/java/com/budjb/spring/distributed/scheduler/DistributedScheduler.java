@@ -9,10 +9,11 @@ import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.ShutdownInstruction;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy;
 import com.budjb.spring.distributed.scheduler.workload.Workload;
-import com.budjb.spring.distributed.scheduler.workload.WorkloadProviderRegistry;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;
+import com.budjb.spring.distributed.scheduler.workload.WorkloadRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * instruction submission to cluster members. The actual load balancing logic is provided
  * by a {@link SchedulerStrategy} implementation.
  */
-public class DistributedScheduler {
+public class DistributedScheduler implements DisposableBean {
     /**
      * Logger.
      */
@@ -44,11 +45,6 @@ public class DistributedScheduler {
     private final SchedulerProperties schedulerProperties;
 
     /**
-     * Workload providers.
-     */
-    private final WorkloadProviderRegistry workloadProviderRegistry;
-
-    /**
      * Cluster manager.
      */
     private final ClusterManager<ClusterMember> clusterManager;
@@ -59,26 +55,31 @@ public class DistributedScheduler {
     private final SchedulerStrategy schedulerStrategy;
 
     /**
+     * Workload repository.
+     */
+    private final WorkloadRepository workloadRepository;
+
+    /**
      * Constructor.
      *
-     * @param distributedLockProvider  Distributed lock provider.
-     * @param workloadProviderRegistry Workload provider registry.
-     * @param clusterManager           Cluster manager.
-     * @param schedulerProperties      Scheduler configuration properties.
-     * @param schedulerStrategy        Strategy implementation used by the scheduler to load balancer the cluster.
+     * @param distributedLockProvider Distributed lock provider.
+     * @param clusterManager          Cluster manager.
+     * @param schedulerProperties     Scheduler configuration properties.
+     * @param schedulerStrategy       Strategy implementation used by the scheduler to load balancer the cluster.
+     * @param workloadRepository      Workload repository.
      */
     public DistributedScheduler(
         DistributedLockProvider distributedLockProvider,
-        WorkloadProviderRegistry workloadProviderRegistry,
         ClusterManager<ClusterMember> clusterManager,
         SchedulerProperties schedulerProperties,
-        SchedulerStrategy schedulerStrategy
+        SchedulerStrategy schedulerStrategy,
+        WorkloadRepository workloadRepository
     ) {
         this.distributedLockProvider = distributedLockProvider;
-        this.workloadProviderRegistry = workloadProviderRegistry;
         this.clusterManager = clusterManager;
         this.schedulerProperties = schedulerProperties;
         this.schedulerStrategy = schedulerStrategy;
+        this.workloadRepository = workloadRepository;
     }
 
     /**
@@ -141,14 +142,14 @@ public class DistributedScheduler {
             }
         }
         catch (InterruptedException ignored) {
-            if (lock.isLocked()) {
+            if (!lock.supportsLeases() || (lock.supportsLeases() && lock.isLocked())) {
                 lock.unlock();
             }
             return;
         }
 
         try {
-            Set<Workload> registeredWorkloads = workloadProviderRegistry.getWorkloads();
+            Set<Workload> registeredWorkloads = workloadRepository.getWorkloads();
 
             Map<ClusterMember, WorkloadReport> reports = clusterManager.submitInstruction(new ReportInstruction());
             if (reports.size() == 0) {
@@ -172,16 +173,6 @@ public class DistributedScheduler {
     }
 
     /**
-     * Determines if it's time to schedule workloads.
-     *
-     * @return whether it's time to schedule workloads.
-     */
-    private boolean isTimeToSchedule() {
-        long time = clusterManager.getScheduleTime();
-        return time <= 0 || System.currentTimeMillis() >= time;
-    }
-
-    /**
      * Shuts down all workloads.
      */
     public void shutdown() {
@@ -191,5 +182,23 @@ public class DistributedScheduler {
         catch (Exception e) {
             log.error("unable to shut down workloads", e);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void destroy() {
+        shutdown();
+    }
+
+    /**
+     * Determines if it's time to schedule workloads.
+     *
+     * @return whether it's time to schedule workloads.
+     */
+    private boolean isTimeToSchedule() {
+        long time = clusterManager.getScheduleTime();
+        return time <= 0 || System.currentTimeMillis() >= time;
     }
 }
