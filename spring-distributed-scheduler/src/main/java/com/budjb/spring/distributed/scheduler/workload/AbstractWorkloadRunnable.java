@@ -1,6 +1,7 @@
 package com.budjb.spring.distributed.scheduler.workload;
 
 import com.budjb.spring.distributed.scheduler.RunningState;
+import org.springframework.util.Assert;
 
 /**
  * A base implementation of {@link WorkloadRunnable} that provides most of the functionality
@@ -34,6 +35,7 @@ public abstract class AbstractWorkloadRunnable implements WorkloadRunnable {
      * @param workload Workload that this runnable services.
      */
     protected AbstractWorkloadRunnable(Workload workload) {
+        Assert.notNull(workload, "workload must not be null");
         this.workload = workload;
     }
 

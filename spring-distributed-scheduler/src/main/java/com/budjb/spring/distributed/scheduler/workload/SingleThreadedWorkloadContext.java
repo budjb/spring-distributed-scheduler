@@ -3,24 +3,22 @@ package com.budjb.spring.distributed.scheduler.workload;
 import com.budjb.spring.distributed.scheduler.RunningState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 /**
  * A base implementation of {@link WorkloadContext} that provides a framework around
  * running a workload that will only ever use one {@link WorkloadRunnable} and thread.
  */
-public abstract class SingleThreadedWorkloadContext implements WorkloadContext {
+public class SingleThreadedWorkloadContext implements WorkloadContext {
     /**
-     * Workload.
+     * Workload runnable.
      */
-    private final Workload workload;
+    private final WorkloadRunnable runnable;
+
     /**
      * Logger.
      */
     private Logger log = LoggerFactory.getLogger(SingleThreadedWorkloadContext.class);
-    /**
-     * Workload runnable.
-     */
-    private WorkloadRunnable runnable;
 
     /**
      * Workload runnable thread.
@@ -30,10 +28,11 @@ public abstract class SingleThreadedWorkloadContext implements WorkloadContext {
     /**
      * Constructor.
      *
-     * @param workload Workload.
+     * @param runnable Workload runnable.
      */
-    protected SingleThreadedWorkloadContext(Workload workload) {
-        this.workload = workload;
+    public SingleThreadedWorkloadContext(WorkloadRunnable runnable) {
+        Assert.notNull(runnable, "workload runnable must not be null");
+        this.runnable = runnable;
     }
 
     /**
@@ -41,7 +40,7 @@ public abstract class SingleThreadedWorkloadContext implements WorkloadContext {
      */
     @Override
     public Workload getWorkload() {
-        return workload;
+        return runnable.getWorkload();
     }
 
     /**
@@ -49,15 +48,8 @@ public abstract class SingleThreadedWorkloadContext implements WorkloadContext {
      */
     @Override
     public WorkloadReport.Entry getWorkloadReportEntry() {
-        return new WorkloadReport.Entry(workload, runnable.getRunningState(), runnable.getException() != null ? runnable.getException().getMessage() : null);
+        return new WorkloadReport.Entry(getWorkload(), runnable.getRunningState(), runnable.getException() != null ? runnable.getException().getMessage() : null);
     }
-
-    /**
-     * Creates the runnable instance for the workload.
-     *
-     * @return New runnable instance for the workload.
-     */
-    protected abstract WorkloadRunnable createRunnable();
 
     /**
      * {@inheritDoc}
@@ -65,16 +57,10 @@ public abstract class SingleThreadedWorkloadContext implements WorkloadContext {
     @Override
     public void start() {
         if (thread != null) {
-            if (thread.isAlive()) {
-                throw new IllegalStateException("execution thread for workload " + workload.toString() + " has already been started");
-            }
-            else {
-                thread = null;
-            }
+            throw new IllegalStateException("context for workload " + getWorkload().getUrn() + " has already previously been started");
         }
 
-        runnable = createRunnable();
-        thread = new Thread(runnable, "runnable-" + workload.getUrn());
+        thread = new Thread(runnable, "runnable-" + getWorkload().getUrn());
         thread.start();
     }
 
