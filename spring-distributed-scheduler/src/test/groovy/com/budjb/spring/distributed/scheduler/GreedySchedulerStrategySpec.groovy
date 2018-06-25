@@ -1,10 +1,26 @@
+/*
+ * Copyright 2018 Bud Byrd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.budjb.spring.distributed.scheduler
 
 import com.budjb.spring.distributed.cluster.ClusterMember
 import com.budjb.spring.distributed.cluster.standalone.StandaloneClusterMember
 import com.budjb.spring.distributed.scheduler.instruction.ActionType
 import com.budjb.spring.distributed.scheduler.strategy.GreedySchedulerStrategy
-import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction
+import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy
 import com.budjb.spring.distributed.scheduler.support.workload.TestWorkload
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport
@@ -27,20 +43,20 @@ class GreedySchedulerStrategySpec extends Specification {
         WorkloadReport report = new WorkloadReport()
 
         when:
-        List<Map<ClusterMember, SchedulerInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc] as Set, [(member): report])
+        List<Map<ClusterMember, WorkloadActionsInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc] as Set, [(member): report])
 
         then:
         rounds.size() == 1
 
         when:
-        Map<ClusterMember, SchedulerInstruction> round = rounds[0]
+        Map<ClusterMember, WorkloadActionsInstruction> round = rounds[0]
 
         then:
         round.size() == 1
         round.containsKey(member)
 
         when:
-        SchedulerInstruction instruction = round.get(member)
+        WorkloadActionsInstruction instruction = round.get(member)
 
         then:
         instruction.actions.size() == 3
@@ -66,20 +82,20 @@ class GreedySchedulerStrategySpec extends Specification {
         report.add(eb)
 
         when:
-        List<Map<ClusterMember, SchedulerInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc] as Set, [(member): report])
+        List<Map<ClusterMember, WorkloadActionsInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc] as Set, [(member): report])
 
         then:
         rounds.size() == 1
 
         when:
-        Map<ClusterMember, SchedulerInstruction> round = rounds[0]
+        Map<ClusterMember, WorkloadActionsInstruction> round = rounds[0]
 
         then:
         round.size() == 1
         round.containsKey(member)
 
         when:
-        SchedulerInstruction instruction = round.get(member)
+        WorkloadActionsInstruction instruction = round.get(member)
 
         then:
         instruction.actions.size() == 2
@@ -104,20 +120,20 @@ class GreedySchedulerStrategySpec extends Specification {
         report.add(eb)
 
         when:
-        List<Map<ClusterMember, SchedulerInstruction>> rounds = schedulerStrategy.schedule([wla, wlc] as Set, [(member): report])
+        List<Map<ClusterMember, WorkloadActionsInstruction>> rounds = schedulerStrategy.schedule([wla, wlc] as Set, [(member): report])
 
         then:
         rounds.size() == 2
 
         when:
-        Map<ClusterMember, SchedulerInstruction> round = rounds[0]
+        Map<ClusterMember, WorkloadActionsInstruction> round = rounds[0]
 
         then:
         round.size() == 1
         round.containsKey(member)
 
         when:
-        SchedulerInstruction instruction = round.get(member)
+        WorkloadActionsInstruction instruction = round.get(member)
 
         then:
         instruction.actions.size() == 1
@@ -163,13 +179,13 @@ class GreedySchedulerStrategySpec extends Specification {
         r2.add(ed)
 
         when:
-        List<Map<ClusterMember, SchedulerInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc, wld] as Set, [(cm1): r1, (cm2): r2])
+        List<Map<ClusterMember, WorkloadActionsInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc, wld] as Set, [(cm1): r1, (cm2): r2])
 
         then:
         rounds.size() == 2
 
         when:
-        Map<ClusterMember, SchedulerInstruction> round = rounds[0]
+        Map<ClusterMember, WorkloadActionsInstruction> round = rounds[0]
 
         then:
         round.size() == 1

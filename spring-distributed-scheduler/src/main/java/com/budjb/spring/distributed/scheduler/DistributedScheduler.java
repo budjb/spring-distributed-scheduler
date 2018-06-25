@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Bud Byrd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.budjb.spring.distributed.scheduler;
 
 import com.budjb.spring.distributed.cluster.ClusterManager;
@@ -5,7 +21,7 @@ import com.budjb.spring.distributed.cluster.ClusterMember;
 import com.budjb.spring.distributed.lock.DistributedLock;
 import com.budjb.spring.distributed.lock.DistributedLockProvider;
 import com.budjb.spring.distributed.scheduler.instruction.ReportInstruction;
-import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction;
+import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.ShutdownInstruction;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy;
 import com.budjb.spring.distributed.scheduler.workload.Workload;
@@ -32,7 +48,7 @@ public class DistributedScheduler implements DisposableBean {
     /**
      * Name of the distributed property holding the time the next schedule should occur.
      */
-    private final static String SCHEDULE_TIME_KEY = "schedule-time";
+    private final static String SCHEDULE_TIME_KEY = "distributed-schedule-time";
 
     /**
      * Logger.
@@ -88,8 +104,7 @@ public class DistributedScheduler implements DisposableBean {
     }
 
     /**
-     * Attempts to perform a forceful re-balance when the application starts up.
-     * This will not occur if another node is actively re-balancing.
+     * Attempts to perform a forceful scheduling when the application starts up.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void onStart() {
@@ -97,9 +112,7 @@ public class DistributedScheduler implements DisposableBean {
     }
 
     /**
-     * Attempt to conduct a non-forceful re-balance every 10 seconds. In actuality,
-     * re-balancing will only occur every 5 minutes, but the check is done often so
-     * that a more sophisticated cluster coordination system is not needed.
+     * Attempt to conduct a non-forceful scheduling.
      */
     @Scheduled(fixedRateString = "${indexer.cluster.rebalance-poll-interval:30000}", initialDelayString = "${indexer.cluster.rebalance-poll-delay:30000}")
     public void schedule() {
@@ -107,23 +120,9 @@ public class DistributedScheduler implements DisposableBean {
     }
 
     /**
-     * Re-balances the collector cluster so that load is even.
-     * <p>
-     * The logic is a bit of a doozy, so here's the general outline of the algorithm:
-     * 1. Get the complete list of registered endpoints (those endpoints we *should* be indexing).
-     * 2. Remove any collectors for endpoints that no longer exist.
-     * 3. Determine which endpoints we currently are indexing (even if they're in an error state).
-     * 4. Assign each endpoint that's not currently being indexed to the collector node with the
-     * least load (load being the number of endpoints being indexed by the node).
-     * 5. Balance out the workload so that size of the load on each node is within 1. This requires
-     * a bit of loop iteration.
-     * 6. Restart any remaining collectors that are in an error state.
-     * 7. Submit *only* remove-type instructions to each node first. We must ensure that any
-     * collectors that need to be stopped have completed before starting them on other nodes
-     * to avoid situations where multiple nodes are collecting the same endpoints.
-     * 8. Submit add or restart type instructions to each node.
+     * Conducts a workload scheduling.
      *
-     * @param force If true, will disregard the time check and re-balance now.
+     * @param force If true, will disregard the time check and schedule now.
      */
     public void schedule(boolean force) {
         DistributedLock lock = distributedLockProvider.getDistributedLock("distributed-scheduler-lock" /* TODO: lock name configurable? */);
@@ -158,19 +157,19 @@ public class DistributedScheduler implements DisposableBean {
 
             Map<ClusterMember, WorkloadReport> reports = clusterManager.submitInstruction(new ReportInstruction());
             if (reports.size() == 0) {
-                throw new IllegalStateException("Received no workload reports from any cluster member nodes");
+                throw new IllegalStateException("received no workload reports from any cluster member nodes");
             }
 
-            List<Map<ClusterMember, SchedulerInstruction>> instructions = schedulerStrategy.schedule(registeredWorkloads, reports);
+            List<Map<ClusterMember, WorkloadActionsInstruction>> instructions = schedulerStrategy.schedule(registeredWorkloads, reports);
 
-            for (Map<ClusterMember, SchedulerInstruction> instructionSet : instructions) {
+            for (Map<ClusterMember, WorkloadActionsInstruction> instructionSet : instructions) {
                 clusterManager.submitInstructions(instructionSet);
             }
 
             setScheduleTime(System.currentTimeMillis() + schedulerProperties.getRebalanceInterval());
         }
         catch (Exception e) {
-            log.error("Unexpected exception encountered while scheduling workloads", e);
+            log.error("unexpected exception encountered while scheduling workloads", e);
         }
         finally {
             lock.unlock();

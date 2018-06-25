@@ -1,6 +1,22 @@
+/*
+ * Copyright 2018 Bud Byrd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.budjb.spring.distributed.scheduler.workload
 
-import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction
+import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction
 import com.budjb.spring.distributed.scheduler.instruction.ActionType
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction
 import spock.lang.Specification
@@ -15,7 +31,7 @@ class SchedulerActionsInstructionSpec extends Specification {
         SchedulerAction b = new SchedulerAction(null, null)
 
         when:
-        SchedulerInstruction instruction = new SchedulerInstruction([a, b])
+        WorkloadActionsInstruction instruction = new WorkloadActionsInstruction([a, b])
 
         then:
         instruction.actions.size() == 2
@@ -32,10 +48,12 @@ class SchedulerActionsInstructionSpec extends Specification {
         SchedulerAction b = new SchedulerAction(Mock(Workload), ActionType.ADD)
         SchedulerAction c = new SchedulerAction(Mock(Workload), ActionType.RESTART)
         SchedulerAction d = new SchedulerAction(Mock(Workload), ActionType.REMOVE)
+        SchedulerAction e = new SchedulerAction(Mock(Workload), ActionType.STOP)
 
         WorkloadContextManager workloadContextManager = Mock(WorkloadContextManager)
+        workloadContextManager.isServicing(_) >> true
 
-        SchedulerInstruction instruction = new SchedulerInstruction([a, b, c, d])
+        WorkloadActionsInstruction instruction = new WorkloadActionsInstruction([a, b, c, d, e])
         instruction.workloadContextManager = workloadContextManager
 
         when:
@@ -43,6 +61,7 @@ class SchedulerActionsInstructionSpec extends Specification {
 
         then:
         1 * workloadContextManager.start(_)
+        1 * workloadContextManager.remove(_) >> future
         1 * workloadContextManager.stop(_) >> future
         1 * workloadContextManager.restart(_) >> future
         1 * workloadContextManager.fail(_)

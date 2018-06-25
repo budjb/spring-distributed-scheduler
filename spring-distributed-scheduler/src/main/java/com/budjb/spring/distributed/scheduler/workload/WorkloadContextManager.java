@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Bud Byrd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.budjb.spring.distributed.scheduler.workload;
 
 import com.budjb.spring.distributed.scheduler.SchedulerProperties;
@@ -17,6 +33,7 @@ import java.util.stream.Collectors;
  * Responsible for containing and managing running workloads via {@link WorkloadContext workload contexts} created
  * by {@link WorkloadContextFactory workload factories}. Managing the lifecycle of a workload through the manager
  * only interacts with workload contexts running on locally running application node, and not the cluster.
+ * Therefore, this class should be treated as an internal component and not interacted with directly.
  */
 public class WorkloadContextManager {
     /**
@@ -106,14 +123,24 @@ public class WorkloadContextManager {
     }
 
     /**
+     * Stops and removes the given workload.
+     *
+     * @param workload Workload to remove.
+     * @return A future for the process of removing the workload.
+     */
+    public Future remove(Workload workload) {
+        List<WorkloadContext> contexts = getContexts(workload);
+        this.workloadContexts.removeAll(contexts);
+        return stop(contexts);
+    }
+
+    /**
      * Stops the given workload.
      *
      * @param workload Workload to stop.
      * @return A future for the process of stopping the workload.
      */
     public Future stop(Workload workload) {
-        List<WorkloadContext> workloadContexts = getContexts(workload);
-        this.workloadContexts.removeAll(workloadContexts);
         return stop(getContexts(workload));
     }
 
@@ -125,7 +152,7 @@ public class WorkloadContextManager {
      */
     public Future restart(Workload workload) {
         return executorService.submit(() -> {
-            Future future = stop(workload);
+            Future future = remove(workload);
 
             while (!future.isDone()) {
                 try {
@@ -164,6 +191,17 @@ public class WorkloadContextManager {
     }
 
     /**
+     * Returns whether the manager is service the given workload (i.e. is there at least
+     * one context with the given workload).
+     *
+     * @param workload Workload to check.
+     * @return Whether the manager is service the given workload.
+     */
+    public boolean isServicing(Workload workload) {
+        return workloadContexts.stream().anyMatch(c -> c.getWorkload().equals(workload));
+    }
+
+    /**
      * Returns all workload contexts associated with the given workload.
      *
      * @param workload Workload to retrieve contexts for.
@@ -186,7 +224,7 @@ public class WorkloadContextManager {
             try {
                 do {
                     futures.removeIf(Future::isDone);
-                    Thread.sleep(schedulerProperties.getInstruction().getPollInterval());
+                    Thread.sleep(schedulerProperties.getActionPollInterval());
                 }
                 while (futures.size() > 0);
             }
@@ -206,14 +244,14 @@ public class WorkloadContextManager {
         return executorService.submit(() -> {
             context.stop();
 
-            long end = System.currentTimeMillis() + schedulerProperties.getInstruction().getPollTimeout();
+            long end = System.currentTimeMillis() + schedulerProperties.getActionPollTimeout();
 
             while (System.currentTimeMillis() < end) {
                 if (context.isStopped()) {
                     return;
                 }
                 try {
-                    Thread.sleep(schedulerProperties.getInstruction().getPollInterval());
+                    Thread.sleep(schedulerProperties.getActionPollInterval());
                 }
                 catch (InterruptedException ignored) {
                     log.error("interrupted while stopping workload " + context.getWorkload().getUrn());

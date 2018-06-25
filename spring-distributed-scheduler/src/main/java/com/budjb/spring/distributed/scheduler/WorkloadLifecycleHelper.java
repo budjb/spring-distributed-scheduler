@@ -1,7 +1,23 @@
+/*
+ * Copyright 2018 Bud Byrd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.budjb.spring.distributed.scheduler;
 
 import com.budjb.spring.distributed.cluster.ClusterManager;
-import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction;
+import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.ActionType;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction;
 import com.budjb.spring.distributed.scheduler.workload.Workload;
@@ -12,6 +28,11 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Provides a way to influence the workload lifecycle during the application runtime.
+ * Note that changes made to the cluster workload state through this class will, by
+ * its very nature, automatically be cleaned up by the scheduler.
+ */
 public class WorkloadLifecycleHelper {
     /**
      * Cluster manager.
@@ -156,7 +177,7 @@ public class WorkloadLifecycleHelper {
      */
     private void submitInstruction(Workload workload, ActionType actionType) throws ExecutionException, InterruptedException {
         SchedulerAction action = new SchedulerAction(workload, actionType);
-        SchedulerInstruction instruction = new SchedulerInstruction(Collections.singletonList(action));
+        WorkloadActionsInstruction instruction = new WorkloadActionsInstruction(Collections.singletonList(action));
         clusterManager.submitInstruction(instruction);
     }
 }

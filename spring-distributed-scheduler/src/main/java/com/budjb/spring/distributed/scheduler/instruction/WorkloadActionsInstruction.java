@@ -1,7 +1,24 @@
+/*
+ * Copyright 2018 Bud Byrd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.budjb.spring.distributed.scheduler.instruction;
 
 import com.budjb.spring.distributed.cluster.Instruction;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction;
+import com.budjb.spring.distributed.scheduler.workload.Workload;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadContextManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +32,7 @@ import java.util.concurrent.Future;
  * An instruction created by the scheduler system that conducts changes to workload
  * assignments for a specific cluster member.
  */
-public class SchedulerInstruction implements Instruction<Boolean> {
+public class WorkloadActionsInstruction implements Instruction<Boolean> {
     /**
      * Scheduler actions to perform.
      */
@@ -24,7 +41,7 @@ public class SchedulerInstruction implements Instruction<Boolean> {
     /**
      * Logger.
      */
-    private Logger log = LoggerFactory.getLogger(SchedulerInstruction.class);
+    private Logger log = LoggerFactory.getLogger(WorkloadActionsInstruction.class);
 
     /**
      * Workload context manager.
@@ -36,7 +53,7 @@ public class SchedulerInstruction implements Instruction<Boolean> {
      *
      * @param actions the scheduler actions to perform.
      */
-    public SchedulerInstruction(List<SchedulerAction> actions) {
+    public WorkloadActionsInstruction(List<SchedulerAction> actions) {
         this.actions = actions;
     }
 
@@ -67,22 +84,36 @@ public class SchedulerInstruction implements Instruction<Boolean> {
         List<Future<?>> futures = new ArrayList<>();
 
         for (SchedulerAction action : actions) {
+            Workload workload = action.getWorkload();
+
             try {
                 switch (action.getActionType()) {
                     case ADD:
-                        workloadContextManager.start(action.getWorkload());
+                        workloadContextManager.start(workload);
+                        break;
+
+                    case STOP:
+                        if (workloadContextManager.isServicing(workload)) {
+                            futures.add(workloadContextManager.stop(workload));
+                        }
                         break;
 
                     case REMOVE:
-                        futures.add(workloadContextManager.stop(action.getWorkload()));
+                        if (workloadContextManager.isServicing(workload)) {
+                            futures.add(workloadContextManager.remove(workload));
+                        }
                         break;
 
                     case RESTART:
-                        futures.add(workloadContextManager.restart(action.getWorkload()));
+                        if (workloadContextManager.isServicing(workload)) {
+                            futures.add(workloadContextManager.restart(workload));
+                        }
                         break;
 
                     case FAIL:
-                        workloadContextManager.fail(action.getWorkload());
+                        if (workloadContextManager.isServicing(workload)) {
+                            workloadContextManager.fail(workload);
+                        }
                         break;
 
                     default:
@@ -93,7 +124,7 @@ public class SchedulerInstruction implements Instruction<Boolean> {
                 throw e;
             }
             catch (Exception e) {
-                log.error("Unhandled exception encountered while starting workload " + action.getWorkload().toString(), e);
+                log.error("Unhandled exception encountered while starting workload " + workload.toString(), e);
             }
         }
 
