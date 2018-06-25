@@ -1,3 +1,28 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven { setUrl('http://repo.spring.io/plugins-release') }
+    }
+    dependencies {
+        classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
+        classpath "io.spring.gradle:dependency-management-plugin:${springDependencyManagementVersion}"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-maven'
+apply plugin: 'propdeps-idea'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+version version
+group 'com.budjb'
+
 dependencyManagement {
     imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
 }
@@ -8,6 +33,10 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
+}
+
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter'
     compile 'org.springframework.boot:spring-boot-starter-validation'
@@ -15,10 +44,28 @@ dependencies {
     compile 'com.budjb:spring-distributed-cluster:0.1.0.BETA'
 
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
+    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
     testCompile 'cglib:cglib-nodep:3.2.6'
     testCompile 'org.objenesis:objenesis:2.6'
 
     optional "org.springframework.boot:spring-boot-configuration-processor"
+}
+
+compileJava.dependsOn(processResources)
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }
 
 publishing {
