@@ -1,5 +1,6 @@
 package com.budjb.spring.distributed.scheduler.instruction;
 
+import com.budjb.spring.distributed.cluster.Instruction;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadContextManager;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package com.budjb.spring.distributed.scheduler;
 
-import com.budjb.spring.distributed.scheduler.cluster.ClusterManager;
+import com.budjb.spring.distributed.cluster.ClusterManager;
 import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.ActionType;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction;

@@ -1,5 +1,4 @@
 rootProject.name = 'spring-distributed-scheduler'
 include 'spring-distributed-scheduler'
-include 'spring-distributed-scheduler-hazelcast'
 include 'spring-distributed-scheduler-documentation'
 include 'spring-distributed-scheduler-example'

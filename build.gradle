@@ -13,7 +13,9 @@ buildscript {
     }
 }
 
-configure(subprojects.findAll { ['spring-distributed-scheduler', 'spring-distributed-scheduler-hazelcast'].contains(it.name) }) {
+configure(subprojects.findAll {
+    ['spring-distributed-scheduler', 'spring-distributed-scheduler-hazelcast'].contains(it.name)
+}) {
     apply plugin: 'java'
     apply plugin: 'groovy'
     apply plugin: 'propdeps'
@@ -28,6 +30,7 @@ configure(subprojects.findAll { ['spring-distributed-scheduler', 'spring-distrib
 
     repositories {
         jcenter()
+        mavenLocal()
         mavenCentral()
     }
 

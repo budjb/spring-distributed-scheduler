@@ -1,6 +1,6 @@
 package com.budjb.spring.distributed.scheduler.strategy;
 
-import com.budjb.spring.distributed.scheduler.cluster.ClusterMember;
+import com.budjb.spring.distributed.cluster.ClusterMember;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;
 
 import java.util.HashMap;

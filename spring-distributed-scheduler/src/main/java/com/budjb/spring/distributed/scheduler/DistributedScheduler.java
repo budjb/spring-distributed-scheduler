@@ -1,9 +1,9 @@
 package com.budjb.spring.distributed.scheduler;
 
+import com.budjb.spring.distributed.cluster.ClusterManager;
+import com.budjb.spring.distributed.cluster.ClusterMember;
 import com.budjb.spring.distributed.lock.DistributedLock;
 import com.budjb.spring.distributed.lock.DistributedLockProvider;
-import com.budjb.spring.distributed.scheduler.cluster.ClusterManager;
-import com.budjb.spring.distributed.scheduler.cluster.ClusterMember;
 import com.budjb.spring.distributed.scheduler.instruction.ReportInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.ShutdownInstruction;
@@ -30,6 +30,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class DistributedScheduler implements DisposableBean {
     /**
+     * Name of the distributed property holding the time the next schedule should occur.
+     */
+    private final static String SCHEDULE_TIME_KEY = "schedule-time";
+
+    /**
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(DistributedScheduler.class);
@@ -47,7 +52,7 @@ public class DistributedScheduler implements DisposableBean {
     /**
      * Cluster manager.
      */
-    private final ClusterManager<ClusterMember> clusterManager;
+    private final ClusterManager clusterManager;
 
     /**
      * Workload scheduler strategy.
@@ -70,7 +75,7 @@ public class DistributedScheduler implements DisposableBean {
      */
     public DistributedScheduler(
         DistributedLockProvider distributedLockProvider,
-        ClusterManager<ClusterMember> clusterManager,
+        ClusterManager clusterManager,
         SchedulerProperties schedulerProperties,
         SchedulerStrategy schedulerStrategy,
         WorkloadRepository workloadRepository
@@ -162,7 +167,7 @@ public class DistributedScheduler implements DisposableBean {
                 clusterManager.submitInstructions(instructionSet);
             }
 
-            clusterManager.setScheduleTime(System.currentTimeMillis() + schedulerProperties.getRebalanceInterval());
+            setScheduleTime(System.currentTimeMillis() + schedulerProperties.getRebalanceInterval());
         }
         catch (Exception e) {
             log.error("Unexpected exception encountered while scheduling workloads", e);
@@ -198,7 +203,30 @@ public class DistributedScheduler implements DisposableBean {
      * @return whether it's time to schedule workloads.
      */
     private boolean isTimeToSchedule() {
-        long time = clusterManager.getScheduleTime();
-        return time <= 0 || System.currentTimeMillis() >= time;
+        return System.currentTimeMillis() >= getScheduleTime();
+    }
+
+    /**
+     * Returns the time the next schedule should occur.
+     *
+     * @return The time the next schedule should occur.
+     */
+    private long getScheduleTime() {
+        Long time = clusterManager.getProperty(SCHEDULE_TIME_KEY, Long.class);
+
+        if (time == null) {
+            return 0;
+        }
+
+        return time;
+    }
+
+    /**
+     * Sets the time the next schedule should occur.
+     *
+     * @param time The time the next schedule should occur.
+     */
+    private void setScheduleTime(long time) {
+        clusterManager.setProperty(SCHEDULE_TIME_KEY, time);
     }
 }

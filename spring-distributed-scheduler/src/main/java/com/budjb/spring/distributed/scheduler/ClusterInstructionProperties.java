@@ -1,6 +1,6 @@
 package com.budjb.spring.distributed.scheduler;
 
-import com.budjb.spring.distributed.scheduler.instruction.Instruction;
+import com.budjb.spring.distributed.cluster.Instruction;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Min;

@@ -1,7 +1,7 @@
 package com.budjb.spring.distributed.scheduler
 
-import com.budjb.spring.distributed.scheduler.cluster.ClusterMember
-import com.budjb.spring.distributed.scheduler.cluster.standalone.StandaloneClusterMember
+import com.budjb.spring.distributed.cluster.ClusterMember
+import com.budjb.spring.distributed.cluster.standalone.StandaloneClusterMember
 import com.budjb.spring.distributed.scheduler.instruction.ActionType
 import com.budjb.spring.distributed.scheduler.strategy.GreedySchedulerStrategy
 import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction

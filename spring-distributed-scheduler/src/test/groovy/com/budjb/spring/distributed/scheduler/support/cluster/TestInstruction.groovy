@@ -1,6 +1,6 @@
 package com.budjb.spring.distributed.scheduler.support.cluster
 
-import com.budjb.spring.distributed.scheduler.instruction.Instruction
+import com.budjb.spring.distributed.cluster.Instruction
 
 import java.util.concurrent.Future
 

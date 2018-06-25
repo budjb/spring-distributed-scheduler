@@ -1,6 +1,6 @@
 package com.budjb.distributed.scheduler.example;
 
-import com.budjb.spring.distributed.scheduler.cluster.ClusterManager;
+import com.budjb.spring.distributed.cluster.ClusterManager;
 import com.budjb.spring.distributed.scheduler.instruction.ReportInstruction;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

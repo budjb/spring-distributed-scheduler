@@ -1,6 +1,6 @@
 package com.budjb.spring.distributed.scheduler.support.cluster
 
-import com.budjb.spring.distributed.scheduler.cluster.ClusterMember
+import com.budjb.spring.distributed.cluster.ClusterMember
 
 class TestClusterMember extends ClusterMember {
     /**

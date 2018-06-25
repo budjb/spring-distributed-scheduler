@@ -1,5 +1,6 @@
 package com.budjb.spring.distributed.scheduler.instruction;
 
+import com.budjb.spring.distributed.cluster.Instruction;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerAction;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadContextManager;
 import org.slf4j.Logger;
@@ -16,14 +17,15 @@ import java.util.concurrent.Future;
  */
 public class SchedulerInstruction implements Instruction<Boolean> {
     /**
+     * Scheduler actions to perform.
+     */
+    private final List<SchedulerAction> actions;
+
+    /**
      * Logger.
      */
     private Logger log = LoggerFactory.getLogger(SchedulerInstruction.class);
 
-    /**
-     * Scheduler actions to perform.
-     */
-    private final List<SchedulerAction> actions;
     /**
      * Workload context manager.
      */

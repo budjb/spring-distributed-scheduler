@@ -1,8 +1,9 @@
 package com.budjb.spring.distributed.scheduler
 
+import com.budjb.spring.distributed.cluster.ClusterConfigurationProperties
+import com.budjb.spring.distributed.cluster.standalone.StandaloneClusterManager
 import com.budjb.spring.distributed.lock.DistributedLockProvider
 import com.budjb.spring.distributed.lock.reentrant.ReentrantDistributedLockProvider
-import com.budjb.spring.distributed.scheduler.cluster.standalone.StandaloneClusterManager
 import com.budjb.spring.distributed.scheduler.instruction.SchedulerInstruction
 import com.budjb.spring.distributed.scheduler.instruction.ActionType
 import com.budjb.spring.distributed.scheduler.strategy.GreedySchedulerStrategy
@@ -20,6 +21,7 @@ class IntegrationSpec extends Specification {
     DefaultListableBeanFactory beanFactory
     DistributedLockProvider distributedLockProvider
     SchedulerProperties schedulerProperties
+    ClusterConfigurationProperties clusterConfigurationProperties
     StandaloneClusterManager clusterManager
     SchedulerStrategy schedulerStrategy
 
@@ -32,7 +34,8 @@ class IntegrationSpec extends Specification {
         distributedLockProvider = new ReentrantDistributedLockProvider()
 
         schedulerProperties = new SchedulerProperties()
-        clusterManager = new StandaloneClusterManager(schedulerProperties)
+        clusterConfigurationProperties = new ClusterConfigurationProperties()
+        clusterManager = new StandaloneClusterManager(clusterConfigurationProperties)
         clusterManager.setBeanFactory(beanFactory)
 
         schedulerStrategy = new GreedySchedulerStrategy()

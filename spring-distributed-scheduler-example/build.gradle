@@ -11,8 +11,9 @@ apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 
 repositories {
-    mavenCentral()
     jcenter()
+    mavenLocal()
+    mavenCentral()
 }
 
 dependencies {

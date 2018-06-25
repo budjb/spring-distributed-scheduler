@@ -2,10 +2,17 @@ dependencyManagement {
     imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
 }
 
+repositories {
+    jcenter()
+    mavenLocal()
+    mavenCentral()
+}
+
 dependencies {
-    compile 'com.budjb:spring-distributed-locks:0.1.4.BETA'
     compile 'org.springframework.boot:spring-boot-starter'
     compile 'org.springframework.boot:spring-boot-starter-validation'
+    compile 'com.budjb:spring-distributed-locks:0.1.4.BETA'
+    compile 'com.budjb:spring-distributed-cluster:0.1.0.BETA'
 
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
     testCompile 'cglib:cglib-nodep:3.2.6'
