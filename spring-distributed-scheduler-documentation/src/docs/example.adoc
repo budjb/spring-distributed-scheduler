@@ -1,0 +1,11 @@
+== Example
+
+A great way to get started with the library is to take a look at the
+https://github.com/budjb/spring-distributed-scheduler/tree/master/spring-distributed-scheduler-example[example project].
+It contains a trivial implementation of a type of workload, which illustrates the basic structure an implementation
+might follow.
+
+The workload provider advertises that there are 3 workload instances that need to be serviced, with IDs _a_, _b_, and
+_c_. `ExampleWorkloadRunnable` simply prints a message with their ID to the log every second. While the library is
+aimed at processes that aren't simply timed to run on a regular interval, the example is intended to demonstrate how
+a workload's runnable might be written.

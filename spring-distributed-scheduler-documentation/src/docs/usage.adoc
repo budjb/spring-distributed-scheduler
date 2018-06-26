@@ -1,0 +1,10 @@
+== Usage
+
+The distributed scheduler handles load balancing workloads, and applications need not be concerned
+about how workloads should be distributed. An application may influence the behavior of distribution
+through configuration, and contribute workloads to the scheduler by implementing various components
+that represent a type of workload.
+
+=== Configuration
+
+=== Components
