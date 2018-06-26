@@ -14,6 +14,7 @@ repositories {
     jcenter()
     mavenLocal()
     mavenCentral()
+    maven { url "https://dl.bintray.com/budjb/spring" } // TODO remove this once on jcenter
 }
 
 dependencies {
