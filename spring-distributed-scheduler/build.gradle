@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Bud Byrd
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ buildscript {
     dependencies {
         classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
         classpath "io.spring.gradle:dependency-management-plugin:${springDependencyManagementVersion}"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
     }
 }
 
@@ -36,7 +36,6 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
-version version
 group 'com.budjb'
 
 dependencyManagement {
@@ -44,10 +43,7 @@ dependencyManagement {
 }
 
 repositories {
-    jcenter()
-    mavenLocal()
     mavenCentral()
-    maven { url "https://dl.bintray.com/budjb/spring" } // TODO remove this once on jcenter
 }
 
 dependencyManagement {
@@ -57,10 +53,10 @@ dependencyManagement {
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter'
     compile 'org.springframework.boot:spring-boot-starter-validation'
-    compile 'com.budjb:spring-distributed-locks:0.1.4.BETA'
-    compile 'com.budjb:spring-distributed-cluster:0.1.0.BETA'
 
-    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
+    compile 'com.budjb:spring-distributed-locks:0.1.5.BETA'
+    compile 'com.budjb:spring-distributed-cluster:0.1.1.BETA'
+
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
     testCompile 'cglib:cglib-nodep:3.2.6'
     testCompile 'org.objenesis:objenesis:2.6'
@@ -97,33 +93,32 @@ publishing {
             artifactId project.name
             version project.version
 
-            pom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = DELEGATE_FIRST
+            pom {
+                name = project.name
+                description = projectDescription
+                url = githubHttpsUrl
 
-                    name project.name
-                    description projectDescription
-                    url githubHttpsUrl
-                    packaging 'jar'
-
-                    licenses {
-                        license {
-                            name 'The Apache License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        }
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
-                    developers {
-                        developer {
-                            id 'budjb'
-                            name 'Bud Byrd'
-                            email 'bud.byrd@gmail.com'
-                        }
+                }
+                developers {
+                    developer {
+                        id = 'budjb'
+                        name = 'Bud Byrd'
+                        email = 'bud.byrd@gmail.com'
                     }
-                    scm {
-                        url githubHttpsUrl
-                        connection "scm:git:${githubHttpsUrl}.git"
-                        developerConnection "scm:git:${githubGitUrl}"
-                    }
+                }
+                scm {
+                    url = githubHttpsUrl
+                    connection = "scm:git:" + githubHttpsUrl + ".git"
+                    developerConnection = "scm:git:" + githubHttpsUrl + ".git"
+                }
+                issueManagement {
+                    system = 'GitHub Issues'
+                    url = githubHttpsUrl + "/issues"
                 }
             }
         }
@@ -155,6 +150,11 @@ bintray {
             gpg {
                 sign = true
                 passphrase = System.getenv('GPG_PASSWORD')
+            }
+            mavenCentralSync {
+                sync = true
+                user = System.getenv(sonatypeUsernameEnvVar)
+                password = System.getenv(sonatypePasswordEnvVar)
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Bud Byrd
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class GreedySchedulerStrategy extends AbstractSchedulerStrategy {
         }
 
         // Restart failed workloads.
-        context.getMapping().forEach((k, v) -> v.getEntries().stream().filter(e -> e.getState().isTerminated()).forEach(e -> restartWorkload(context, k, e.getWorkload())));
+        context.getMapping().forEach((k, v) -> v.getEntries().stream().filter(e -> e.getState().isTerminated()).map(WorkloadReport.Entry::getWorkload).distinct().forEach(w -> restartWorkload(context, k, w)));
 
         return toInstructionMap(context);
     }
