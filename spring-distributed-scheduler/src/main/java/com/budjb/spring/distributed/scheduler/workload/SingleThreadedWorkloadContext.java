@@ -145,4 +145,15 @@ public class SingleThreadedWorkloadContext implements WorkloadContext {
     public RunningState getRunningState() {
         return runnable.getRunningState();
     }
+
+    /**
+     * Sets the priority of the thread.
+     *
+     * @param priority New priority of the thread.
+     */
+    public void setThreadPriority(int priority) {
+        if (thread != null) {
+            thread.setPriority(priority);
+        }
+    }
 }
