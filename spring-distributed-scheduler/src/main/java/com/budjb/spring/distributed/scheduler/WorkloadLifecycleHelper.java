@@ -73,6 +73,7 @@ public class WorkloadLifecycleHelper {
             log.error("unhandled exception while stopping workload " + workload.getUrn(), e);
         }
         catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
             log.error("interrupted while waiting for workload " + workload.getUrn() + " to stop");
         }
     }
@@ -120,6 +121,7 @@ public class WorkloadLifecycleHelper {
             log.error("unhandled exception while failing workload " + workload.getUrn(), e);
         }
         catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
             log.error("interrupted while waiting for workload " + workload.getUrn() + " to fail");
         }
     }
@@ -153,6 +155,7 @@ public class WorkloadLifecycleHelper {
             log.error("unhandled exception while restarting workload " + workload.getUrn(), e);
         }
         catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
             log.error("interrupted while waiting for workload " + workload.getUrn() + " to restart");
         }
     }

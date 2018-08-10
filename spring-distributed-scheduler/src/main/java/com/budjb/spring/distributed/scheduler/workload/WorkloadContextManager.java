@@ -159,6 +159,7 @@ public class WorkloadContextManager {
                     future.get();
                 }
                 catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
                     log.error("interrupted while restarting workload " + workload.getUrn());
                     return;
                 }
@@ -229,6 +230,7 @@ public class WorkloadContextManager {
                 while (futures.size() > 0);
             }
             catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
                 log.error("interrupted while stopping workloads");
             }
         });
@@ -254,6 +256,7 @@ public class WorkloadContextManager {
                     Thread.sleep(schedulerProperties.getActionPollInterval());
                 }
                 catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
                     log.error("interrupted while stopping workload " + context.getWorkload().getUrn());
                 }
             }

@@ -125,8 +125,9 @@ public class SingleThreadedWorkloadContext implements WorkloadContext {
             thread.interrupt();
             thread.join();
         }
-        catch (InterruptedException e) {
-            log.error("unable to successfully terminate a workload thread due to being interrupted", e);
+        catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+            log.error("unable to successfully terminate a workload thread due to being interrupted");
         }
     }
 

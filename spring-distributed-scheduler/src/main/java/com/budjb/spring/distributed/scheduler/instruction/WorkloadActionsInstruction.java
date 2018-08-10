@@ -80,7 +80,7 @@ public class WorkloadActionsInstruction implements Instruction<Boolean> {
      * {@inheritDoc}
      */
     @Override
-    public Boolean call() throws InterruptedException {
+    public Boolean call() {
         List<Future<?>> futures = new ArrayList<>();
 
         actions.removeIf(a -> {
@@ -142,6 +142,7 @@ public class WorkloadActionsInstruction implements Instruction<Boolean> {
             }
         }
         catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
             log.info("Interrupted while waiting for instructions to complete");
         }
 

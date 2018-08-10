@@ -146,6 +146,7 @@ public class DistributedScheduler implements DisposableBean {
             }
         }
         catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
             if (!lock.supportsLeases() || (lock.supportsLeases() && lock.isLocked())) {
                 lock.unlock();
             }
