@@ -83,37 +83,44 @@ public class WorkloadActionsInstruction implements Instruction<Boolean> {
     public Boolean call() throws InterruptedException {
         List<Future<?>> futures = new ArrayList<>();
 
+        actions.removeIf(a -> {
+            if (a.getActionType() == ActionType.ADD) {
+                return false;
+            }
+            if (!workloadContextManager.isServicing(a.getWorkload())) {
+                log.warn("Discarding " + a.getActionType() + " instruction for workload " + a.getWorkload() + " because the node is not servicing it");
+            }
+            return !workloadContextManager.isServicing(a.getWorkload());
+        });
+
         for (SchedulerAction action : actions) {
             Workload workload = action.getWorkload();
 
             try {
                 switch (action.getActionType()) {
                     case ADD:
+                        log.info("Adding workload " + workload + " to node");
                         workloadContextManager.start(workload);
                         break;
 
                     case STOP:
-                        if (workloadContextManager.isServicing(workload)) {
-                            futures.add(workloadContextManager.stop(workload));
-                        }
+                        log.info("Stopping workload " + workload + " on node");
+                        futures.add(workloadContextManager.stop(workload));
                         break;
 
                     case REMOVE:
-                        if (workloadContextManager.isServicing(workload)) {
-                            futures.add(workloadContextManager.remove(workload));
-                        }
+                        log.info("Removing workload " + workload + " from node");
+                        futures.add(workloadContextManager.remove(workload));
                         break;
 
                     case RESTART:
-                        if (workloadContextManager.isServicing(workload)) {
-                            futures.add(workloadContextManager.restart(workload));
-                        }
+                        log.info("Restarting workload " + workload + " on node");
+                        futures.add(workloadContextManager.restart(workload));
                         break;
 
                     case FAIL:
-                        if (workloadContextManager.isServicing(workload)) {
-                            workloadContextManager.fail(workload);
-                        }
+                        log.info("Failing workload " + workload + " on node");
+                        workloadContextManager.fail(workload);
                         break;
 
                     default:
@@ -128,9 +135,14 @@ public class WorkloadActionsInstruction implements Instruction<Boolean> {
             }
         }
 
-        while (futures.size() > 0) {
-            futures.removeIf(Future::isDone);
-            Thread.sleep(250);
+        try {
+            while (futures.size() > 0) {
+                futures.removeIf(Future::isDone);
+                Thread.sleep(250);
+            }
+        }
+        catch (InterruptedException ignored) {
+            log.info("Interrupted while waiting for instructions to complete");
         }
 
         return true;
