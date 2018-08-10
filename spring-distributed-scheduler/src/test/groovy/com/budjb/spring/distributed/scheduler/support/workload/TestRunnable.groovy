@@ -30,12 +30,20 @@ class TestRunnable extends AbstractWorkloadRunnable {
         super(workload)
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     void run() {
         setRunningState(RunningState.RUNNING)
 
-        while (!isInterrupted()) {
-            sleep(250)
+        while (!Thread.interrupted()) {
+            try {
+                Thread.sleep(250)
+            }
+            catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt()
+            }
         }
 
         if (!getRunningState().isTerminated()) {

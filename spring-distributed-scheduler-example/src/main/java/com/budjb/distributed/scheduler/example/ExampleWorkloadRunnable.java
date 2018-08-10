@@ -42,12 +42,13 @@ public class ExampleWorkloadRunnable extends AbstractWorkloadRunnable {
         setRunningState(RunningState.RUNNING);
 
         try {
-            while (!isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 log.info("Workload " + getWorkload().getUrn() + " ticked.");
                 try {
                     Thread.sleep(1000);
                 }
                 catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
                     setRunningState(RunningState.STOPPED);
                 }
             }

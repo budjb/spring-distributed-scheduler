@@ -48,21 +48,6 @@ public interface WorkloadRunnable extends Runnable {
     void terminate();
 
     /**
-     * Informs the runnable that it should stop processing. The runnable will
-     * finish its current update waiting cycle before completing and exiting.
-     */
-    void interrupt();
-
-    /**
-     * Returns whether the runnable should stop processing. This does not indicate
-     * its running status. See {@link #getRunningState} for the runnable's actual
-     * run state.
-     *
-     * @return whether the runnable should gracefully discontinue processing.
-     */
-    boolean isInterrupted();
-
-    /**
      * Forces a failure state. This is useful for testing various failure scenarios.
      */
     void fail();

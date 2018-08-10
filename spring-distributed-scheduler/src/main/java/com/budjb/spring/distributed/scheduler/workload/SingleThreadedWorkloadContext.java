@@ -85,8 +85,8 @@ public class SingleThreadedWorkloadContext implements WorkloadContext {
      */
     @Override
     public void stop() {
-        if (thread != null && thread.isAlive() && !getRunningState().isTerminal()) {
-            runnable.interrupt();
+        if (thread != null && thread.isAlive() && !thread.isInterrupted()) {
+            thread.interrupt();
         }
     }
 

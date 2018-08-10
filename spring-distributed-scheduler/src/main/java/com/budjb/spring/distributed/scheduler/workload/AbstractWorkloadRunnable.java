@@ -40,13 +40,6 @@ public abstract class AbstractWorkloadRunnable implements WorkloadRunnable {
     private Throwable throwable = null;
 
     /**
-     * Whether the runnable has been interrupted. Processes implementing this parent
-     * class should check with this flag before it continues further operations so that
-     * execution may be gracefully completed and terminated.
-     */
-    private boolean interrupted = false;
-
-    /**
      * Constructor.
      *
      * @param workload Workload that this runnable services.
@@ -86,7 +79,6 @@ public abstract class AbstractWorkloadRunnable implements WorkloadRunnable {
      */
     @Override
     public void terminate() {
-        interrupted = true;
         runningState = RunningState.STOPPED;
     }
 
@@ -94,30 +86,7 @@ public abstract class AbstractWorkloadRunnable implements WorkloadRunnable {
      * {@inheritDoc}
      */
     @Override
-    public void interrupt() {
-        if (!interrupted && !getRunningState().isTerminated() && !getRunningState().isTerminal()) {
-            runningState = RunningState.STOPPING;
-            interrupted = true;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isInterrupted() {
-        if (Thread.currentThread().isInterrupted()) {
-            interrupted = true;
-        }
-        return interrupted;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void fail() {
-        interrupted = true;
         runningState = RunningState.ERROR;
     }
 

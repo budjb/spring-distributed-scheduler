@@ -242,12 +242,12 @@ public class WorkloadContextManager {
      */
     private Future stop(WorkloadContext context) {
         return executorService.submit(() -> {
+            log.debug("stopping workload " + context.getWorkload().getUrn());
             context.stop();
 
-            long end = System.currentTimeMillis() + schedulerProperties.getActionPollTimeout();
-
-            while (System.currentTimeMillis() < end) {
+            while (true) {
                 if (context.isStopped()) {
+                    log.debug("workload " + context.getWorkload().getUrn() + "has stopped");
                     return;
                 }
                 try {
@@ -256,10 +256,6 @@ public class WorkloadContextManager {
                 catch (InterruptedException ignored) {
                     log.error("interrupted while stopping workload " + context.getWorkload().getUrn());
                 }
-            }
-
-            if (!context.isStopped()) {
-                context.terminate();
             }
         });
     }
