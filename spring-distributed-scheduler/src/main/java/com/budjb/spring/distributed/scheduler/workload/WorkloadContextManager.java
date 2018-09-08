@@ -19,9 +19,11 @@ package com.budjb.spring.distributed.scheduler.workload;
 import com.budjb.spring.distributed.scheduler.SchedulerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -59,7 +61,7 @@ public class WorkloadContextManager {
     /**
      * Workload contexts.
      */
-    private final List<WorkloadContext> workloadContexts = new ArrayList<>();
+    private final List<WorkloadContext> workloadContexts = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Constructor.
@@ -96,7 +98,22 @@ public class WorkloadContextManager {
      * @return A complete workload report.
      */
     public WorkloadReport getWorkloadReport() {
-        return new WorkloadReport(getWorkloadContexts().stream().map(WorkloadContext::getWorkloadReportEntry).collect(Collectors.toList()));
+        synchronized (this) {
+            // TODO: verify that the null entry problem is resolved, and change back to the stream
+            WorkloadReport report = new WorkloadReport();
+
+            for (WorkloadContext workloadContext : workloadContexts) {
+                if (workloadContext == null) {
+                    log.error("A workload context was null and skipped.");
+                    continue;
+                }
+
+                report.add(workloadContext.getWorkloadReportEntry());
+            }
+
+            return report;
+//            return new WorkloadReport(workloadContexts.stream().map(WorkloadContext::getWorkloadReportEntry).collect(Collectors.toList()));
+        }
     }
 
     /**
@@ -115,11 +132,16 @@ public class WorkloadContextManager {
      * @param workload Workload to start.
      */
     public void start(Workload workload) {
-        findSupportingContextFactories(workload).forEach(f -> {
-            WorkloadContext workloadContext = f.createContext(workload);
-            workloadContexts.add(workloadContext);
-            workloadContext.start();
-        });
+        synchronized (this) {
+            for (WorkloadContextFactory factory : findSupportingContextFactories(workload)) {
+                WorkloadContext workloadContext = factory.createContext(workload);
+
+                Assert.notNull(workloadContext, "Workload context was null for workload " + workload.toString() + " using factory " + factory.getClass().getName());
+
+                workloadContexts.add(workloadContext);
+                workloadContext.start();
+            }
+        }
     }
 
     /**
@@ -129,9 +151,11 @@ public class WorkloadContextManager {
      * @return A future for the process of removing the workload.
      */
     public Future remove(Workload workload) {
-        List<WorkloadContext> contexts = getContexts(workload);
-        this.workloadContexts.removeAll(contexts);
-        return stop(contexts);
+        synchronized (this) {
+            List<WorkloadContext> contexts = getContexts(workload);
+            this.workloadContexts.removeAll(contexts);
+            return stop(contexts);
+        }
     }
 
     /**
@@ -160,11 +184,11 @@ public class WorkloadContextManager {
                 }
                 catch (InterruptedException ignored) {
                     Thread.currentThread().interrupt();
-                    log.error("interrupted while restarting workload " + workload.getUrn());
+                    log.error("Interrupted while restarting workload " + workload.getUrn());
                     return;
                 }
                 catch (ExecutionException e) {
-                    log.error("unexpected execution exception while attempting to restart workload " + workload.getUrn());
+                    log.error("Unexpected execution exception while attempting to restart workload " + workload.getUrn());
                     return;
                 }
             }
@@ -199,7 +223,9 @@ public class WorkloadContextManager {
      * @return Whether the manager is service the given workload.
      */
     public boolean isServicing(Workload workload) {
-        return workloadContexts.stream().anyMatch(c -> c.getWorkload().equals(workload));
+        synchronized (this) {
+            return workloadContexts.stream().anyMatch(c -> c.getWorkload().equals(workload));
+        }
     }
 
     /**
@@ -209,7 +235,9 @@ public class WorkloadContextManager {
      * @return All workload contexts associated with the given workload.
      */
     private List<WorkloadContext> getContexts(Workload workload) {
-        return workloadContexts.stream().filter(c -> c.getWorkload().equals(workload)).collect(Collectors.toList());
+        synchronized (this) {
+            return workloadContexts.stream().filter(c -> c.getWorkload().equals(workload)).collect(Collectors.toList());
+        }
     }
 
     /**
@@ -231,7 +259,7 @@ public class WorkloadContextManager {
             }
             catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
-                log.error("interrupted while stopping workloads");
+                log.error("Interrupted while stopping workloads");
             }
         });
     }
@@ -244,12 +272,12 @@ public class WorkloadContextManager {
      */
     private Future stop(WorkloadContext context) {
         return executorService.submit(() -> {
-            log.debug("stopping workload " + context.getWorkload().getUrn());
+            log.debug("Stopping workload " + context.getWorkload().getUrn());
             context.stop();
 
             while (true) {
                 if (context.isStopped()) {
-                    log.debug("workload " + context.getWorkload().getUrn() + "has stopped");
+                    log.debug("Workload " + context.getWorkload().getUrn() + "has stopped");
                     return;
                 }
                 try {
@@ -257,7 +285,7 @@ public class WorkloadContextManager {
                 }
                 catch (InterruptedException ignored) {
                     Thread.currentThread().interrupt();
-                    log.error("interrupted while stopping workload " + context.getWorkload().getUrn());
+                    log.error("Interrupted while stopping workload " + context.getWorkload().getUrn());
                 }
             }
         });

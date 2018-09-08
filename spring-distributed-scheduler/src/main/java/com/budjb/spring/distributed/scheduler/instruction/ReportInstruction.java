@@ -19,6 +19,8 @@ package com.budjb.spring.distributed.scheduler.instruction;
 import com.budjb.spring.distributed.cluster.Instruction;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadContextManager;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -33,10 +35,21 @@ public class ReportInstruction implements Instruction<WorkloadReport> {
     transient WorkloadContextManager workloadContextManager;
 
     /**
+     * Logger.
+     */
+    private Logger log = LoggerFactory.getLogger(WorkloadActionsInstruction.class);
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public WorkloadReport call() {
-        return workloadContextManager.getWorkloadReport();
+        try {
+            return workloadContextManager.getWorkloadReport();
+        }
+        catch (Exception e) {
+            log.error("Unhandled exception encountered while retrieving report.", e);
+            return null;
+        }
     }
 }

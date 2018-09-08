@@ -152,7 +152,7 @@ bintray {
                 passphrase = System.getenv('GPG_PASSWORD')
             }
             mavenCentralSync {
-                sync = false
+                sync = true
                 user = System.getenv(sonatypeUsernameEnvVar)
                 password = System.getenv(sonatypePasswordEnvVar)
             }

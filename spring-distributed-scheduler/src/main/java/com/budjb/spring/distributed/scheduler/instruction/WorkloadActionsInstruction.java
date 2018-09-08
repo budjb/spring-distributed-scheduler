@@ -124,14 +124,11 @@ public class WorkloadActionsInstruction implements Instruction<Boolean> {
                         break;
 
                     default:
-                        throw new UnsupportedOperationException("action type " + action.getActionType().toString() + " is unsupported");
+                        log.error("Action type " + action.getActionType().toString() + " is unsupported");
                 }
             }
-            catch (UnsupportedOperationException e) {
-                throw e;
-            }
             catch (Exception e) {
-                log.error("Unhandled exception encountered while starting workload " + workload.toString(), e);
+                log.error("Unhandled exception encountered while processing instructions for workload " + workload.toString(), e);
             }
         }
 
