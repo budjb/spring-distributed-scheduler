@@ -19,7 +19,6 @@ package com.budjb.spring.distributed.scheduler;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.Min;
 import java.time.Duration;
 
 /**
@@ -31,31 +30,26 @@ public class SchedulerProperties {
     /**
      * The amount of time that should pass between cluster re-balancing, in milliseconds.
      */
-    @Min(0)
     private Duration rebalanceInterval = Duration.ofMinutes(3);
     /**
      * The amount of time that the application should wait until it starts checking whether
      * a re-balance should occur, in milliseconds.
      */
-    @Min(0)
     private Duration rebalancePollDelay = Duration.ofSeconds(30);
     /**
      * The amount of time that should pass between checks to determine whether a re-rebalance
      * should occur, in milliseconds.
      */
-    @Min(0)
     private Duration rebalancePollInterval = Duration.ofSeconds(30);
     /**
      * The amount of time that the worker context manager should wait for the instruction
      * logic to complete before giving up (in milliseconds).
      */
-    @Min(0)
     private Duration actionPollTimeout = Duration.ofMinutes(2);
     /**
      * The amount of time that the worker context manager should wait before polling whether
      * the instruction logic has completed (in milliseconds).
      */
-    @Min(0)
     private Duration actionPollInterval = Duration.ofMillis(250);
 
     public Duration getActionPollTimeout() {

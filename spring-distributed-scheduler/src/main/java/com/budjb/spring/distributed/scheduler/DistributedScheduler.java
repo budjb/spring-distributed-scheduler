@@ -104,7 +104,7 @@ public class DistributedScheduler implements DisposableBean {
     /**
      * Attempt to conduct a non-forceful scheduling.
      */
-    @Scheduled(fixedRateString = "${indexer.cluster.rebalance-poll-interval:30s}", initialDelayString = "${indexer.cluster.rebalance-poll-delay:30s}")
+    @Scheduled(fixedDelayString = "${indexer.cluster.rebalance-poll-interval:PT30s}", initialDelayString = "${indexer.cluster.rebalance-poll-delay:PT30s}")
     public void schedule() {
         schedule(false);
     }
