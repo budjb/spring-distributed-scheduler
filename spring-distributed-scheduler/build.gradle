@@ -44,6 +44,7 @@ dependencyManagement {
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencyManagement {
@@ -54,8 +55,8 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter'
     compile 'org.springframework.boot:spring-boot-starter-validation'
 
-    compile 'com.budjb:spring-distributed-locks:0.1.5.BETA'
-    compile 'com.budjb:spring-distributed-cluster:0.1.1.BETA'
+    compile 'com.budjb:spring-distributed-locks:0.1.7.BETA'
+    compile 'com.budjb:spring-distributed-cluster:0.1.2.BETA'
 
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
     testCompile 'cglib:cglib-nodep:3.2.6'
@@ -137,7 +138,7 @@ bintray {
         githubRepo = 'budjb/spring-distributed-scheduler'
 
         desc = projectDescription
-        labels = ['spring-boot', 'spring-framework', 'hazelcast']
+        labels = ['spring-boot', 'spring-framework']
         repo = 'spring'
         name = project.name
         licenses = ['Apache-2.0']
