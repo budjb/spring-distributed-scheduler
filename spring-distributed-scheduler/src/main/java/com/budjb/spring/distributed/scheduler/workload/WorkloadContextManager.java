@@ -253,7 +253,7 @@ public class WorkloadContextManager {
             try {
                 do {
                     futures.removeIf(Future::isDone);
-                    Thread.sleep(schedulerProperties.getActionPollInterval());
+                    Thread.sleep(schedulerProperties.getActionPollInterval().toMillis());
                 }
                 while (futures.size() > 0);
             }
@@ -281,7 +281,7 @@ public class WorkloadContextManager {
                     return;
                 }
                 try {
-                    Thread.sleep(schedulerProperties.getActionPollInterval());
+                    Thread.sleep(schedulerProperties.getActionPollInterval().toMillis());
                 }
                 catch (InterruptedException ignored) {
                     Thread.currentThread().interrupt();

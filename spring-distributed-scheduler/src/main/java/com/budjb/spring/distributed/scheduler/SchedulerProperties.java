@@ -20,6 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Min;
+import java.time.Duration;
 
 /**
  * A set of configuration properties used to manage the cluster.
@@ -31,69 +32,69 @@ public class SchedulerProperties {
      * The amount of time that should pass between cluster re-balancing, in milliseconds.
      */
     @Min(0)
-    private long rebalanceInterval = 180000L;
+    private Duration rebalanceInterval = Duration.ofMinutes(3);
     /**
      * The amount of time that the application should wait until it starts checking whether
      * a re-balance should occur, in milliseconds.
      */
     @Min(0)
-    private long rebalancePollDelay = 30000L;
+    private Duration rebalancePollDelay = Duration.ofSeconds(30);
     /**
      * The amount of time that should pass between checks to determine whether a re-rebalance
      * should occur, in milliseconds.
      */
     @Min(0)
-    private long rebalancePollInterval = 30000L;
+    private Duration rebalancePollInterval = Duration.ofSeconds(30);
     /**
      * The amount of time that the worker context manager should wait for the instruction
      * logic to complete before giving up (in milliseconds).
      */
     @Min(0)
-    private long actionPollTimeout = 120000L;
+    private Duration actionPollTimeout = Duration.ofMinutes(2);
     /**
      * The amount of time that the worker context manager should wait before polling whether
      * the instruction logic has completed (in milliseconds).
      */
     @Min(0)
-    private long actionPollInterval = 250L;
+    private Duration actionPollInterval = Duration.ofMillis(250);
 
-    public long getActionPollTimeout() {
+    public Duration getActionPollTimeout() {
         return actionPollTimeout;
     }
 
-    public void setActionPollTimeout(long actionPollTimeout) {
+    public void setActionPollTimeout(Duration actionPollTimeout) {
         this.actionPollTimeout = actionPollTimeout;
     }
 
-    public long getActionPollInterval() {
+    public Duration getActionPollInterval() {
         return actionPollInterval;
     }
 
-    public void setActionPollInterval(long actionPollInterval) {
+    public void setActionPollInterval(Duration actionPollInterval) {
         this.actionPollInterval = actionPollInterval;
     }
 
-    public long getRebalancePollDelay() {
+    public Duration getRebalancePollDelay() {
         return rebalancePollDelay;
     }
 
-    public void setRebalancePollDelay(long rebalancePollDelay) {
+    public void setRebalancePollDelay(Duration rebalancePollDelay) {
         this.rebalancePollDelay = rebalancePollDelay;
     }
 
-    public long getRebalancePollInterval() {
+    public Duration getRebalancePollInterval() {
         return rebalancePollInterval;
     }
 
-    public void setRebalancePollInterval(long rebalancePollInterval) {
+    public void setRebalancePollInterval(Duration rebalancePollInterval) {
         this.rebalancePollInterval = rebalancePollInterval;
     }
 
-    public long getRebalanceInterval() {
+    public Duration getRebalanceInterval() {
         return rebalanceInterval;
     }
 
-    public void setRebalanceInterval(long rebalanceInterval) {
+    public void setRebalanceInterval(Duration rebalanceInterval) {
         this.rebalanceInterval = rebalanceInterval;
     }
 

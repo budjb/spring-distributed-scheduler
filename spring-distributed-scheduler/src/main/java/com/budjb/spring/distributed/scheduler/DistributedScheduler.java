@@ -21,8 +21,8 @@ import com.budjb.spring.distributed.cluster.ClusterMember;
 import com.budjb.spring.distributed.lock.DistributedLock;
 import com.budjb.spring.distributed.lock.DistributedLockProvider;
 import com.budjb.spring.distributed.scheduler.instruction.ReportInstruction;
-import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction;
 import com.budjb.spring.distributed.scheduler.instruction.ShutdownInstruction;
+import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction;
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy;
 import com.budjb.spring.distributed.scheduler.workload.Workload;
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport;
@@ -30,8 +30,6 @@ import com.budjb.spring.distributed.scheduler.workload.WorkloadRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
@@ -104,17 +102,9 @@ public class DistributedScheduler implements DisposableBean {
     }
 
     /**
-     * Attempts to perform a forceful scheduling when the application starts up.
-     */
-    @EventListener(ApplicationReadyEvent.class)
-    public void onStart() {
-        schedule(true);
-    }
-
-    /**
      * Attempt to conduct a non-forceful scheduling.
      */
-    @Scheduled(fixedRateString = "${indexer.cluster.rebalance-poll-interval:30000}", initialDelayString = "${indexer.cluster.rebalance-poll-delay:30000}")
+    @Scheduled(fixedRateString = "${indexer.cluster.rebalance-poll-interval:30s}", initialDelayString = "${indexer.cluster.rebalance-poll-delay:30s}")
     public void schedule() {
         schedule(false);
     }
@@ -167,7 +157,7 @@ public class DistributedScheduler implements DisposableBean {
                 clusterManager.submitInstructions(instructionSet);
             }
 
-            setScheduleTime(System.currentTimeMillis() + schedulerProperties.getRebalanceInterval());
+            setScheduleTime(System.currentTimeMillis() + schedulerProperties.getRebalanceInterval().toMillis());
         }
         catch (Exception e) {
             log.error("unexpected exception encountered while scheduling workloads", e);

@@ -29,6 +29,8 @@ import com.budjb.spring.distributed.scheduler.workload.WorkloadRepository
 import org.junit.Ignore
 import spock.lang.Specification
 
+import java.time.Duration
+
 class DistributedSchedulerSpec extends Specification {
     DistributedLockProvider distributedLockProvider
     ClusterManager clusterManager
@@ -45,18 +47,6 @@ class DistributedSchedulerSpec extends Specification {
         schedulerStrategy = Mock(SchedulerStrategy)
 
         distributedScheduler = new DistributedScheduler(distributedLockProvider, clusterManager, schedulerProperties, schedulerStrategy, workloadRepository)
-    }
-
-    def 'When the application starts, a forced schedule occurs'() {
-        setup:
-        DistributedLock lock = Mock(DistributedLock)
-        distributedLockProvider.getDistributedLock((String) _) >> lock
-
-        when:
-        distributedScheduler.onStart()
-
-        then:
-        1 * lock.tryLock(*_) >> false
     }
 
     def 'When it\'s time to check if a schedule needs to occur, a non-forced schedule happens'() {
@@ -79,6 +69,8 @@ class DistributedSchedulerSpec extends Specification {
     @Ignore
     def 'When it\'s not time for a schedule to occur but it is forced, the scheduler runs'() {
         setup:
+        schedulerProperties.getRebalanceInterval() >> Duration.ofSeconds(30)
+
         DistributedLock lock = Mock(DistributedLock)
         lock.tryLock(*_) >> true
         distributedLockProvider.getDistributedLock((String) _) >> lock
@@ -109,6 +101,8 @@ class DistributedSchedulerSpec extends Specification {
 
     def 'When it\'s time for a schedule to occur, instructions are compiled and sent to cluster members'() {
         setup:
+        schedulerProperties.getRebalanceInterval() >> Duration.ofSeconds(30)
+
         DistributedLock lock = Mock(DistributedLock)
         lock.tryLock(*_) >> true
         distributedLockProvider.getDistributedLock((String) _) >> lock
