@@ -19,8 +19,8 @@ package com.budjb.spring.distributed.scheduler
 import com.budjb.spring.distributed.cluster.ClusterMember
 import com.budjb.spring.distributed.cluster.standalone.StandaloneClusterMember
 import com.budjb.spring.distributed.scheduler.instruction.ActionType
-import com.budjb.spring.distributed.scheduler.strategy.GreedySchedulerStrategy
 import com.budjb.spring.distributed.scheduler.instruction.WorkloadActionsInstruction
+import com.budjb.spring.distributed.scheduler.strategy.GreedySchedulerStrategy
 import com.budjb.spring.distributed.scheduler.strategy.SchedulerStrategy
 import com.budjb.spring.distributed.scheduler.support.workload.TestWorkload
 import com.budjb.spring.distributed.scheduler.workload.WorkloadReport
@@ -203,5 +203,53 @@ class GreedySchedulerStrategySpec extends Specification {
         round.entrySet()[0].value.actions.size() == 1
         round.entrySet()[0].value.actions[0].workload.is(wlc)
         round.entrySet()[0].value.actions[0].actionType == ActionType.ADD
+    }
+
+    def 'When a workload exists on multiple cluster members, balancing removes it until it only exists on one'() {
+        setup:
+        TestWorkload wla = new TestWorkload('a')
+        TestWorkload wlb = new TestWorkload('b')
+        TestWorkload wlc = new TestWorkload('c')
+        TestWorkload wld = new TestWorkload('d')
+
+        ClusterMember cm1 = Mock(ClusterMember)
+        cm1.getUrn() >> 'cm1'
+        ClusterMember cm2 = Mock(ClusterMember)
+        cm2.getUrn() >> 'cm2'
+        ClusterMember cm3 = Mock(ClusterMember)
+        cm3.getUrn() >> 'cm3'
+
+        WorkloadReport.Entry ea = new WorkloadReport.Entry(wla, RunningState.RUNNING)
+        WorkloadReport.Entry eb = new WorkloadReport.Entry(wlb, RunningState.RUNNING)
+        WorkloadReport.Entry ec = new WorkloadReport.Entry(wlc, RunningState.RUNNING)
+        WorkloadReport.Entry ed = new WorkloadReport.Entry(wld, RunningState.RUNNING)
+
+        WorkloadReport r1 = new WorkloadReport()
+        r1.add(ea)
+        r1.add(eb)
+
+        WorkloadReport r2 = new WorkloadReport()
+        r2.add(eb)
+        r2.add(ec)
+
+        WorkloadReport r3 = new WorkloadReport()
+        r3.add(eb)
+        r3.add(ed)
+
+        when:
+        List<Map<ClusterMember, WorkloadActionsInstruction>> rounds = schedulerStrategy.schedule([wla, wlb, wlc, wld] as Set, [(cm1): r1, (cm2): r2, (cm3): r3])
+
+        then:
+        rounds.size() == 1
+
+        when:
+        Map<ClusterMember, WorkloadActionsInstruction> round = rounds[0]
+
+        then:
+        round.size() == 2
+        round.entrySet()*.key.toSet() == (Set) [cm2, cm3]
+        round.entrySet()*.value*.actions*.size() == [1, 1]
+        round.entrySet()*.value*.actions*.workload == [[wlb], [wlb]]
+        round.entrySet()*.value*.actions*.actionType == [[ActionType.REMOVE], [ActionType.REMOVE]]
     }
 }

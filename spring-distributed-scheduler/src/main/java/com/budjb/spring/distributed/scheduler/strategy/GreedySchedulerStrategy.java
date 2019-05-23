@@ -52,6 +52,26 @@ public class GreedySchedulerStrategy extends AbstractSchedulerStrategy {
         // De-schedule orphaned workloads.
         orphanedWorkloads.forEach(w -> removeWorkload(context, w));
 
+        // Find duplicate workloads.
+        // Note that this should not occur under normal circumstances
+        // but may happen when service discovery is lost.
+        registeredWorkloads.forEach(w -> {
+            boolean found = false;
+
+            for (ClusterMember clusterMember : reports.keySet()) {
+                WorkloadReport report = reports.get(clusterMember);
+
+                if (report.getEntries().stream().anyMatch(e -> e.getWorkload().getUrn().equals(w.getUrn()))) {
+                    if (!found) {
+                        found = true;
+                    }
+                    else {
+                        removeWorkload(context, clusterMember, w);
+                    }
+                }
+            }
+        });
+
         // Schedule new workloads on nodes with the least load.
         newWorkloads.forEach(w -> addWorkload(context, findLeastBusyMember(context).getKey(), w));
 
